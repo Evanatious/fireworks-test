@@ -1,0 +1,7 @@
+services:
+  app:
+    build: .
+  httpbin:
+    image: kennethreitz/httpbin:latest
+    ports:
+      - 3001:80

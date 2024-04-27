@@ -1,18 +1,19 @@
 import requests
 import time
 import threading
+from urllib.parse import urlparse, urlunparse
 
 
 class HTTPLoadTester:
     """A general HTTP load-testing and benchmarking library for sending HTTP requests and measuring performance."""
 
-    def test(self, server: str, **kwargs):
-        """Tests a server with the provided arguments.
+    def test(self, url: str, **kwargs):
+        """Tests a url with the provided arguments.
 
         Parameters
         ----------
-        server: str
-            The name of the server
+        url: str
+            The name of the url
         kwargs
             Optional additional parameters, which include:
             qps : int, optional
@@ -35,18 +36,23 @@ class HTTPLoadTester:
         qps = kwargs.get("qps", 0)
         times = kwargs.get("times", 1)
         jobs = kwargs.get("jobs", 1)
+        assert HTTPLoadTester._validate_url(url)
+        assert qps >= 0
+        assert times >= 0
+        assert jobs >= 0
+
         res = {
             "longest": None,
             "shortest": None,
             "average": 0,
             "errors": [],
-            "reqs": times,
+            "reqs": times * jobs,
         }
 
         max_tx = 0
         def run_test():
-            nonlocal res, server, max_tx
-            data = HTTPLoadTester._request(server)
+            nonlocal res, url, max_tx
+            data = HTTPLoadTester._request(url)
             if "err" in data:
                 res["errors"].append(data["err"])
                 return
@@ -71,7 +77,7 @@ class HTTPLoadTester:
         for thread in threads:
             thread.join()
 
-        res["average"] = max_tx / (times * jobs)
+        res["average"] = max_tx / res['reqs']
         return res
 
     def _request(url: str) -> dict:
@@ -79,6 +85,8 @@ class HTTPLoadTester:
 
         try:
             r = requests.get(url)
+            if not r.ok:
+                raise requests.HTTPError(request=r.request, response=r)
             res["isOK"] = r.ok
             res["elapsed"] = r.elapsed.microseconds / 1_000
         except Exception as e:
@@ -86,4 +94,9 @@ class HTTPLoadTester:
 
         return res
 
-
+    def _validate_url(url) -> bool:
+        parts = urlparse(url)
+        if not all([parts.scheme, parts.netloc]):
+            raise ValueError
+        url = urlunparse(parts)
+        return True
