@@ -31,11 +31,12 @@ class HTTPLoadTester:
             the shortest amount of time taken for a test,
             the average amount of time taken for a test,
             the errors raised,
-            and the number of requests made
+            and the total number of requests made
         """
         qps = kwargs.get("qps", 0)
         times = kwargs.get("times", 1)
         jobs = kwargs.get("jobs", 1)
+        #Check for valid URL, only positive numbers
         assert HTTPLoadTester._validate_url(url)
         assert qps >= 0
         assert times >= 0
@@ -49,7 +50,7 @@ class HTTPLoadTester:
             "reqs": times * jobs,
         }
 
-        max_tx = 0
+        max_tx = 0 #keep track of total time elapsed
         def run_test():
             nonlocal res, url, max_tx
             data = HTTPLoadTester._request(url)
@@ -64,6 +65,7 @@ class HTTPLoadTester:
             if not res["shortest"] or elapsed < res["shortest"]:
                 res["shortest"] = elapsed
 
+        #Threads to simulate concurrent users
         threads = []
         for _ in range(times):
             if qps > 0:
@@ -90,6 +92,7 @@ class HTTPLoadTester:
             res["isOK"] = r.ok
             res["elapsed"] = r.elapsed.microseconds / 1_000
         except Exception as e:
+            # pass error as value rather than raising
             res["err"] = e
 
         return res

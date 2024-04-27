@@ -8,10 +8,8 @@ def get_args():
     parser.add_argument('--qps', metavar='[int]', help='Queries per second', default=0, type=int)
     parser.add_argument('-j', metavar='[int]', help='Number of concurrent jobs', default=1, type=int)
     parser.add_argument('-t', metavar='[int]', help='Number of times the test is run per job', default=1, type=int)
-    args = parser.parse_args()
+    return parser.parse_args()
     
-    return args
-
 def main():
     args = get_args()
     bench = HTTPLoadTester()
