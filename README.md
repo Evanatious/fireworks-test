@@ -14,7 +14,7 @@ If "python3" doesn't work, try "python". Same with "pip3" and "pip"
 ```sh
 git clone https://github.com/Evanatious/fireworks-test fireworks
 cd fireworks
-docker build . -t fireworks:lates
+docker build . -t fireworks:latest
 docker run -it fireworks:latest python3 ./main.py --help
 ```
 
